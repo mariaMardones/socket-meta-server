@@ -1,0 +1,35 @@
+// This script is based on a solution provided by Claude 3.5 Sonnet.
+// It has been thoroughly reviewed and validated to ensure that it 
+// is correct and error free. 
+
+plugins {
+    id 'java'
+    id 'application'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+	// Reference to use JSON library
+    implementation 'org.json:json:+'
+}
+
+application {
+    mainClass = 'es.deusto.ingenieria.sd.translation.server.TranslationServer'
+}
+
+// Server port
+def serverPort = 9500       
+
+run {
+    // Port is passed as program argument
+    args = [serverPort.toString()]
+}
