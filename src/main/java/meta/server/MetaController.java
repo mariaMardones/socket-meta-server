@@ -1,16 +1,18 @@
 package meta.server;
 
-import meta.server.MetaService;
+import meta.server.MetaServiceProxy;
 
 public class MetaController {
-    private final MetaService metaService;
+    private final MetaServiceProxy metaServiceProxy;
 
-    public MetaController(MetaService metaService) {
-        this.metaService = metaService;
+    public MetaController(MetaServiceProxy metaServiceProxy) {
+        this.metaServiceProxy = metaServiceProxy;
     }
 
     public void handleRequest(String command) {
-        String response = metaService.processRequest(command);
+        String response = metaServiceProxy.processRequest(command);
         System.out.println("[MetaController] Respuesta: " + response);
     }
 }
+
+

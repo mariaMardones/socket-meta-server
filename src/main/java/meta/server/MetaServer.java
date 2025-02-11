@@ -1,9 +1,6 @@
 package meta.server;
 
-import meta.server.MetaController;
-import meta.server.MetaServiceProxy;
-
-import java.io.*;
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -23,24 +20,8 @@ public class MetaServer {
                     Socket clientSocket = serverSocket.accept();
                     System.out.println(" - MetaServer: Nueva conexión aceptada desde " + clientSocket.getInetAddress());
 
-                    // Crear controlador con un nuevo proxy para este cliente
-                    MetaController controller = new MetaController(new MetaServiceProxy(clientSocket));
-
-                    // Manejo de la comunicación con el cliente
-                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()))) {
-
-                        String request = reader.readLine();
-                        if (request != null) {
-                            controller.handleRequest(request);
-                            writer.write("Procesado: " + request);
-                            writer.newLine();
-                            writer.flush();
-                        }
-
-                    } catch (IOException e) {
-                        System.err.println("Error manejando cliente: " + e.getMessage());
-                    }
+                    // Crear y manejar la conexión
+                    new Thread(new MetaService(clientSocket)).start(); // Crear un hilo para cada cliente
 
                 } catch (IOException e) {
                     System.err.println("# MetaServer: Error al aceptar conexión: " + e.getMessage());

@@ -28,25 +28,27 @@ public class MetaService extends Thread {
 
     public void run() {
         try {
-            String data = this.in.readUTF();
-            System.out.println(" - MetaService - Received data from '" + tcpSocket.getInetAddress().getHostAddress() 
-                                + ":" + tcpSocket.getPort() + "' -> '" + data + "'");
+            while (true) {
+                String data = this.in.readUTF();
+                System.out.println(" - MetaService - Received data from '" + tcpSocket.getInetAddress().getHostAddress() 
+                                    + ":" + tcpSocket.getPort() + "' -> '" + data + "'");
 
-            String response = processRequest(data);
+                String response = processRequest(data);
 
-            this.out.writeUTF(response);
-            System.out.println(" - MetaService - Sent response to '" + tcpSocket.getInetAddress().getHostAddress() 
-                                + ":" + tcpSocket.getPort() + "' -> '" + response + "'");
-
+                this.out.writeUTF(response);
+                this.out.flush();
+                System.out.println(" - MetaService - Sent response to '" + tcpSocket.getInetAddress().getHostAddress() 
+                                    + ":" + tcpSocket.getPort() + "' -> '" + response + "'");
+            }
         } catch (EOFException e) {
-            System.err.println("# MetaService - TCPConnection EOF error: " + e.getMessage());
+            System.out.println("# MetaService - Client disconnected.");
         } catch (IOException e) {
-            System.err.println("# MetaService - TCPConnection IO error: " + e.getMessage());
+            System.err.println("# MetaService - Error: " + e.getMessage());
         } finally {
             try {
                 tcpSocket.close();
             } catch (IOException e) {
-                System.err.println("# MetaService - TCPConnection close error: " + e.getMessage());
+                System.err.println("# MetaService - Socket close error: " + e.getMessage());
             }
         }
     }

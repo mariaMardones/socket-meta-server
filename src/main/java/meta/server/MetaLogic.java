@@ -1,25 +1,14 @@
 package meta.server;
 
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-
 public class MetaLogic {
-
-    private Map<String, String> users = new HashMap<>();
-
-    public MetaLogic() {
-        users.put("user1@example.com", "password123");
-        users.put("user2@example.com", "mypassword");
-    }
+    private final UserRepository userRepository = new UserRepository();
 
     public boolean checkEmail(String email) {
-        return users.containsKey(email);
+        return userRepository.checkEmail(email);
     }
 
     public boolean login(String email, String password) {
-        return users.containsKey(email) && users.get(email).equals(password);
+        return userRepository.validateCredentials(email, password);
     }
 
     public String processRequest(String request) {
