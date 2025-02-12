@@ -2,75 +2,55 @@ package meta.server;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.EOFException;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.StringTokenizer;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.concurrent.atomic.AtomicLong;
 
-public class MetaService extends Thread {
-    private DataInputStream in;
-    private DataOutputStream out;
-    private Socket tcpSocket;
+public class MetaService {
 
     private static final String DELIMITER = "#";
-    private MetaLogic metaLogic = new MetaLogic();
+    private static AtomicLong sessionCounter = new AtomicLong(1); // Para generar IDs de sesión únicos
 
-    public MetaService(Socket socket) {
+    private Socket clientSocket;
+    private DataInputStream in;
+    private DataOutputStream out;
+    private MetaAuthentification metaAuthentification;  // Instancia de MetaAutentification para delegar la creación de la sesión
+
+    // Constructor que recibe el socket del cliente
+    public MetaService(Socket clientSocket, MetaAuthentification metaAuthentification) {
+        this.clientSocket = clientSocket;
+        this.metaAuthentification = metaAuthentification;  // Recibe la instancia de MetaAutentification
         try {
-            this.tcpSocket = socket;
-            this.in = new DataInputStream(socket.getInputStream());
-            this.out = new DataOutputStream(socket.getOutputStream());
-            this.start();
+            this.in = new DataInputStream(clientSocket.getInputStream());
+            this.out = new DataOutputStream(clientSocket.getOutputStream());
+            handleRequest();
         } catch (IOException e) {
-            System.err.println("# MetaService - TCPConnection IO error: " + e.getMessage());
+            System.err.println("# MetaService: IO error during client connection: " + e.getMessage());
         }
     }
 
-    public void run() {
+    private void handleRequest() {
         try {
-            while (true) {
-                String data = this.in.readUTF();
-                System.out.println(" - MetaService - Received data from '" + tcpSocket.getInetAddress().getHostAddress() 
-                                    + ":" + tcpSocket.getPort() + "' -> '" + data + "'");
+            // Leer la solicitud del cliente
+            String request = in.readUTF();
+            System.out.println(" - MetaService: Received request: " + request);
 
-                String response = processRequest(data);
+            // Procesar la solicitud de crear sesión utilizando MetaAutentification
+            String response = metaAuthentification.procesarSolicitudCrearSesion(request);
 
-                this.out.writeUTF(response);
-                this.out.flush();
-                System.out.println(" - MetaService - Sent response to '" + tcpSocket.getInetAddress().getHostAddress() 
-                                    + ":" + tcpSocket.getPort() + "' -> '" + response + "'");
-            }
-        } catch (EOFException e) {
-            System.out.println("# MetaService - Client disconnected.");
+            // Enviar la respuesta al cliente
+            out.writeUTF(response);
+            out.flush();
         } catch (IOException e) {
-            System.err.println("# MetaService - Error: " + e.getMessage());
+            System.err.println("# MetaService: IO error while processing request: " + e.getMessage());
         } finally {
             try {
-                tcpSocket.close();
+                clientSocket.close();
             } catch (IOException e) {
-                System.err.println("# MetaService - Socket close error: " + e.getMessage());
+                System.err.println("# MetaService: Error while closing socket: " + e.getMessage());
             }
-        }
-    }
-
-    public String processRequest(String request) {
-        StringTokenizer tokenizer = new StringTokenizer(request, DELIMITER);
-        
-        if (!tokenizer.hasMoreTokens()) return "ERR#INVALID_REQUEST";
-
-        String action = tokenizer.nextToken();
-        String email = tokenizer.hasMoreTokens() ? tokenizer.nextToken() : null;
-        String password = (action.equals("login") && tokenizer.hasMoreTokens()) ? tokenizer.nextToken() : null;
-
-        if (email == null) return "ERR#MISSING_EMAIL";
-
-        switch (action) {
-            case "checkEmail":
-                return metaLogic.checkEmail(email) ? "OK#EMAIL_FOUND" : "ERR#EMAIL_NOT_FOUND";
-            case "login":
-                return (password != null && metaLogic.login(email, password)) ? "OK#LOGIN_SUCCESS" : "ERR#LOGIN_FAIL";
-            default:
-                return "ERR#UNKNOWN_ACTION";
         }
     }
 }
