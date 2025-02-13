@@ -22,7 +22,7 @@ public class MetaService extends Thread {
          this.start();
      } catch (IOException e) {
          System.err.println("# MetaService: IO error during client connection: " + e.getMessage());
-         closeResources();
+         close();
      }
  }
 
@@ -40,11 +40,11 @@ public class MetaService extends Thread {
      } catch (IOException e) {
          System.err.println("# MetaService: IO error while processing request: " + e.getMessage());
      } finally {
-         closeResources();
+         close();
      }
  }
 
- private void closeResources() {
+ private void close() {
      try {
          if (in != null) in.close();
          if (out != null) out.close();

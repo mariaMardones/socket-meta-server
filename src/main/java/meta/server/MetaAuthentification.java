@@ -16,22 +16,18 @@ public class MetaAuthentification {
         String response = "ERROR#Formato de solicitud inválido";
 
         try {
-            // CREAR_SESION_ENTRENAMIENTO#email#distancia#duracion#tipo
-            if (parts[0].equals("CREAR_SESION_ENTRENAMIENTO") && parts.length == 5) {
-                String email = parts[1];
-                String distance = parts[2];
-                double duration = Double.parseDouble(parts[3]);
-                String type = parts[4];
-                
-                response = crearSesion(email, distance, duration, type);
-                
-                // Enviar respuesta al cliente
+        		String email = parts[1];
+        		String password = parts[2];
+        		response = "LOGIN_OK"+email;
+        	
+        		// Enviar respuesta al cliente
                 DataOutputStream out = new DataOutputStream(socketCliente.getOutputStream());
                 out.writeUTF(response);
                 out.flush();
-                
                 System.out.println("Respuesta enviada: " + response);
-            }
+        	
+        	
+   
         } catch (Exception e) {
             System.err.println("Error procesando solicitud: " + e.getMessage());
             try {
@@ -44,20 +40,5 @@ public class MetaAuthentification {
         }
         
         return response;
-    }
-
-    private String crearSesion(String email, String distance, double duration, String type) {
-        LocalDate fechaInicio = LocalDate.now();
-        LocalTime horaInicio = LocalTime.now();
-        long sessionId = sessionCounter.getAndIncrement();
-        
-        System.out.println("📌 Creando sesión: " +
-                         "ID=" + sessionId +
-                         ", Email=" + email +
-                         ", Tipo=" + type +
-                         ", Distancia=" + distance +
-                         ", Duración=" + duration);
-        
-        return "SESION_CREADA#" + sessionId + "#" + fechaInicio + "#" + horaInicio;
     }
 }
